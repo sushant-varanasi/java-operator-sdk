@@ -110,6 +110,12 @@ All controllers that are registered as a bean, gets automatically registered to 
  
 Kubernetes client creation using properties is also supported, for complete list see: [Link for config class]  
 
+## Correlation IDs
+
+We add automatically additional log information using [MDC](https://www.slf4j.org/manual.html#mdc). 
+See values added by default [here]().
+This can be extended easily by implementing [CorrelationIdProvider] interface by your custom resource. 
+
 ## Dealing with Consistency 
 
 ### Run Single Instance

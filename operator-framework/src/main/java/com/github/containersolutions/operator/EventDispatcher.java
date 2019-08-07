@@ -1,5 +1,6 @@
 package com.github.containersolutions.operator;
 
+import com.github.containersolutions.operator.api.CorrelationIdProvider;
 import com.github.containersolutions.operator.api.ResourceController;
 import io.fabric8.kubernetes.client.*;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
@@ -7,8 +8,10 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.internal.CustomResourceOperationsImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Optional;
 
 public class EventDispatcher<R extends CustomResource> implements Watcher<R> {
@@ -39,13 +42,35 @@ public class EventDispatcher<R extends CustomResource> implements Watcher<R> {
 
     public void eventReceived(Action action, R resource) {
         try {
+            addCorrelationIds(resource);
             log.debug("Action: {}, {}: {}, Resource: {}", action, resource.getClass().getSimpleName(),
                     resource.getMetadata().getName(), resource);
             handleEvent(action, resource);
             log.trace("Even handling finished for action: {} resource: {}", action, resource);
+
         } catch (RuntimeException e) {
             log.error("Error on resource: {}", resource.getMetadata().getName(), e);
+        } finally {
+            clearCorrelationIds();
         }
+    }
+
+    private void addCorrelationIds(R resource) {
+        MDC.put("resource.name", resource.getMetadata().getName());
+        if (resource.getMetadata().getNamespace() != null) {
+            MDC.put("resource.namespace", resource.getMetadata().getNamespace());
+        }
+        if (resource.getMetadata().getClusterName() != null) {
+            MDC.put("resource.clusterName", resource.getMetadata().getClusterName());
+        }
+        if (resource instanceof CorrelationIdProvider) {
+            Map<String, String> correlationIds = ((CorrelationIdProvider) resource).correlationIds();
+            correlationIds.entrySet().forEach(e -> MDC.put(e.getKey(), e.getValue()));
+        }
+    }
+
+    private void clearCorrelationIds() {
+        MDC.clear();
     }
 
     private void handleEvent(Action action, R resource) {
