@@ -113,8 +113,8 @@ Kubernetes client creation using properties is also supported, for complete list
 ## Correlation IDs
 
 We add automatically additional log information using [MDC](https://www.slf4j.org/manual.html#mdc). 
-See values added by default [here]().
-This can be extended easily by implementing [CorrelationIdProvider] interface by your custom resource. 
+See values added by default [here](https://github.com/ContainerSolutions/java-operator-sdk/blob/87c5af27579fa5839fed4c7c389f47f052ccc55c/operator-framework/src/main/java/com/github/containersolutions/operator/EventDispatcher.java#L58).
+This can be extended easily by implementing [CorrelationIdProvider](https://github.com/ContainerSolutions/java-operator-sdk/blob/correlationid-support/operator-framework/src/main/java/com/github/containersolutions/operator/api/CorrelationIdProvider.java) interface by your custom resource. 
 
 ## Dealing with Consistency 
 
