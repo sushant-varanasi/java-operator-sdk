@@ -1,6 +1,6 @@
 package com.github.containersolutions.operator;
 
-import com.github.containersolutions.operator.api.CorrelationIdProvider;
+import com.github.containersolutions.operator.api.LogEnricher;
 import com.github.containersolutions.operator.api.ResourceController;
 import io.fabric8.kubernetes.client.*;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
@@ -41,7 +41,7 @@ public class EventDispatcher<R extends CustomResource> implements Watcher<R> {
 
     public void eventReceived(Action action, R resource) {
         try {
-            addCorrelationIdsToLogs(resource);
+            enrichLogging(resource);
             log.debug("Action: {}, {}: {}, Resource: {}", action, resource.getClass().getSimpleName(),
                     resource.getMetadata().getName(), resource);
             handleEvent(action, resource);
@@ -49,11 +49,11 @@ public class EventDispatcher<R extends CustomResource> implements Watcher<R> {
         } catch (RuntimeException e) {
             log.error("Error on resource: {}", resource.getMetadata().getName(), e);
         } finally {
-            clearCorrelationIds();
+            cleanupLogEnrichment();
         }
     }
 
-    private void addCorrelationIdsToLogs(R resource) {
+    private void enrichLogging(R resource) {
         MDC.put("resource.name", resource.getMetadata().getName());
         if (resource.getMetadata().getNamespace() != null) {
             MDC.put("resource.namespace", resource.getMetadata().getNamespace());
@@ -61,13 +61,13 @@ public class EventDispatcher<R extends CustomResource> implements Watcher<R> {
         if (resource.getMetadata().getClusterName() != null) {
             MDC.put("resource.clusterName", resource.getMetadata().getClusterName());
         }
-        if (resource instanceof CorrelationIdProvider) {
-            Map<String, String> correlationIds = ((CorrelationIdProvider) resource).correlationIds();
+        if (resource instanceof LogEnricher) {
+            Map<String, String> correlationIds = ((LogEnricher) resource).logEntries();
             correlationIds.entrySet().forEach(e -> MDC.put(e.getKey(), e.getValue()));
         }
     }
 
-    private void clearCorrelationIds() {
+    private void cleanupLogEnrichment() {
         MDC.clear();
     }
 

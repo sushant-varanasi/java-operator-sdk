@@ -5,8 +5,8 @@ import java.util.Map;
 /**
  * todo document this, discuss naming with Marek
  */
-public interface CorrelationIdProvider {
+public interface LogEnricher {
 
-    Map<String, String> correlationIds();
+    Map<String, String> logEntries();
 
 }
