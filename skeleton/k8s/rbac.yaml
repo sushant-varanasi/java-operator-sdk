@@ -1,0 +1,43 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: tomcat-operator
+rules:
+- apiGroups:
+  - tomcats.tomcatoperator.io
+  resources:
+  - tomcats
+  verbs:
+  - "*"
+- apiGroups:
+  - tomcats.tomcatoperator.io
+  resources:
+  - tomcats/status
+  verbs:
+  - "*"
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - "get"
+  - "list"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tomcat-operator
+  namespace: tomcat-operator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: tomcat-operator
+subjects:
+- kind: ServiceAccount
+  name: tomcat-operator
+  namespace: tomcat-operator
+roleRef:
+  kind: ClusterRole
+  name: tomcat-operator
+  apiGroup: ""
